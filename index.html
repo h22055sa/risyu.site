@@ -427,4 +427,56 @@
 
 </section>
 
+  
+
+<script>
+  // ===== STEPクリック切り替え =====
+  const steps = document.querySelectorAll(".step-btn");
+  const bubbles = document.querySelectorAll(".bubble");
+
+  steps.forEach(btn => {
+    btn.addEventListener("click", () => {
+      // すべてリセット
+      steps.forEach(s => s.classList.remove("active"));
+      bubbles.forEach(b => b.classList.remove("active"));
+      // 押されたSTEPだけアクティブ
+      btn.classList.add("active");
+      document.querySelector(`.bubble[data-step='${btn.dataset.step}']`).classList.add("active");
+    });
+  });
+
+  // ===== チェックボタン =====
+  const checks = document.querySelectorAll(".check");
+  checks.forEach(c => {
+    c.addEventListener("click", () => {
+      c.classList.toggle("checked");
+    });
+  });
+
+  document.querySelectorAll('.toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const next = btn.nextElementSibling.nextElementSibling;
+    if (next && next.classList.contains('subcategory')) {
+      next.style.display = next.style.display === 'block' ? 'none' : 'block';
+    }
+  });
+});
+
+  document.querySelectorAll('.toggle').forEach(button => {
+  button.addEventListener('click', () => {
+    button.classList.toggle('open'); // ← ここで三角の変化
+    const next = button.nextElementSibling;
+    if (next && next.classList.contains('subcategory')) {
+      next.style.display = next.style.display === 'none' ? 'block' : 'none';
+    }
+  });
+});
+
+
+
+
+</script>
+
+</body>
+</html>
 
