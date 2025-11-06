@@ -1,0 +1,430 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>履修サポートサイト（試作）</title>
+  <style>
+    /* ===== 全体 ===== */
+    body {
+      font-family: 'BIZ UDゴシック', 'Noto Sans JP', sans-serif;
+      background: #fff;
+      color: #333;
+      margin: 0;
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+    }
+
+    /* ===== STEPナビ ===== */
+    .step-nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .step-btn {
+      padding: 10px 20px;
+      border-radius: 25px;
+      background-color: #f8b5c3; /* 薄ピンク */
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+      border: none;
+    }
+
+    .step-btn.active {
+      background-color: #f06292; /* 濃ピンク */
+    }
+
+    .dots {
+      color: #f8b5c3;
+      font-size: 24px;
+    }
+
+    /* ===== 吹き出し ===== */
+    .bubble {
+      display: none;
+      position: relative;
+      background: #ffe6eb;
+      border-radius: 15px;
+      padding: 20px;
+      width: 60%;
+      margin: 0 auto 60px;
+      color: #333;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      transition: 0.3s;
+    }
+
+    .bubble.active {
+      display: block;
+    }
+
+    .bubble::after {
+      content: "";
+      position: absolute;
+      border-style: solid;
+    }
+
+    .bubble[data-step="1"]::after {
+      top: -10px; left: 15%;
+      border-width: 0 10px 10px 10px;
+      border-color: transparent transparent #ffe6eb transparent;
+    }
+    .bubble[data-step="2"]::after {
+      top: -10px; left: 38%;
+      border-width: 0 10px 10px 10px;
+      border-color: transparent transparent #ffe6eb transparent;
+    }
+    .bubble[data-step="3"]::after {
+      top: -10px; left: 61%;
+      border-width: 0 10px 10px 10px;
+      border-color: transparent transparent #ffe6eb transparent;
+    }
+    .bubble[data-step="4"]::after {
+      top: -10px; left: 84%;
+      border-width: 0 10px 10px 10px;
+      border-color: transparent transparent #ffe6eb transparent;
+    }
+
+    /* ===== 時間割 ===== */
+    table {
+      border-collapse: collapse;
+      margin: 0 auto 60px;
+      width: 80%;
+      max-width: 800px;
+    }
+
+    th, td {
+      border: 1px solid #f8b5c3;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #ffe6eb;
+      color: #333;
+    }
+
+    /* ===== 進捗パート ===== */
+    details {
+      width: 80%;
+      margin: 0 auto 20px;
+      text-align: left;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+      color: #f06292;
+      margin-bottom: 10px;
+    }
+
+    .progress-container {
+      background-color: #ffe6eb;
+      border-radius: 20px;
+      height: 15px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar {
+      height: 15px;
+      border-radius: 20px;
+      background-color: #f06292;
+      width: 50%;
+      transition: 0.3s;
+    }
+
+    .subject {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 0;
+    }
+
+    .check {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #f8b5c3;
+      cursor: pointer;
+      margin-left: 10px;
+      transition: 0.3s;
+    }
+
+    .check.checked {
+      background-color: #f06292;
+      border-color: #f06292;
+    }
+
+    .progress-section {
+  margin-top: 40px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.progress-section h2 {
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.category {
+  margin-bottom: 20px;
+}
+
+.toggle {
+  background: none;
+  border: none;
+  font-weight: 600;
+  color: #444;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #ffd6e7;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 6px 0 12px;
+}
+
+.progress-bar.small {
+  height: 8px;
+}
+.progress-bar.tiny {
+  height: 6px;
+}
+.progress-bar.large {
+  height: 14px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #ff4b93;
+  border-radius: 8px 0 0 8px;
+}
+
+.subcategory {
+  margin-left: 20px;
+  display: none;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.total h3 {
+  margin-bottom: 8px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+    .main-category {
+  font-size: 1.2em; /* ← ここで文字を少し大きく */
+  font-weight: bold; /* 念のため太字も維持 */
+}
+
+    .toggle {
+  position: relative;
+  padding-left: 1.5em; /* 三角の分だけ余白 */
+  cursor: pointer;
+}
+
+.toggle::before {
+  content: "▶";              /* 閉じてるときの三角 */
+  position: absolute;
+  left: 0.4em;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #555;                /* 三角の色 */
+  transition: transform 0.2s, color 0.2s;
+}
+
+/* 開いた状態のスタイル（.open クラスが付く） */
+.toggle.open::before {
+  content: "▼";              /* 開いたときの下向き三角 */
+  color: #aaa;               /* 薄いグレーにする */
+}
+
+
+  </style>
+</head>
+<body>
+<h1>履修サポートページ（試作）</h1>
+
+<!-- STEPナビ -->
+<div class="step-nav">
+  <button class="step-btn active" data-step="1">STEP 1</button>
+  <div class="dots">…</div>
+  <button class="step-btn" data-step="2">STEP 2</button>
+  <div class="dots">…</div>
+  <button class="step-btn" data-step="3">STEP 3</button>
+  <div class="dots">…</div>
+  <button class="step-btn" data-step="4">STEP 4</button>
+</div>
+
+<!-- 吹き出し -->
+<div class="bubble active" data-step="1">
+  履修の基本方針を確認しよう。履修の手引きで必修・選択の構成を把握！
+</div>
+<div class="bubble" data-step="2">
+  必修科目を追加しよう！重複してないか注意！
+</div>
+<div class="bubble" data-step="3">
+  選択必修科目・資格課程も計画的に履修しよう。
+</div>
+<div class="bubble" data-step="4">
+  確定前に単位数を再チェック！漏れがないか確認しよう
+</div>
+
+<!-- 時間割表 -->
+<table>
+  <tr>
+    <th>時間割</th>
+    <th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
+  </tr>
+  <tr><th>1限</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><th>2限</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><th>3限</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><th>4限</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><th>5限</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><th>6限</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><th>7限</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+
+
+
+<!-- 進捗パート -->
+
+<section class="progress-section">
+  <h2>📊 履修進捗</h2>
+
+  <!-- 全学共通 -->
+  <div class="category">
+    <button class="toggle main-category"><strong>全学共通（12 / 36）</strong></button>
+    <div class="progress-bar"><div class="progress-fill" style="width:20%;"></div></div>
+
+    <div class="subcategory">
+      <p>必修（8 / 26）</p>
+      <div class="progress-bar small"><div class="progress-fill" style="width:40%;"></div></div>
+
+      <p>選択必修（1 / 2）</p>
+      <div class="progress-bar small"><div class="progress-fill" style="width:15%;"></div></div>
+
+      <p>選択（1 / 8）</p>
+      <div class="progress-bar small"><div class="progress-fill" style="width:5%;"></div></div>
+    </div>
+  </div>
+
+  <!-- 専門教育 -->
+  <div class="category">
+    <button class="toggle main-category"><strong>専門教育（45 / 73）</strong></button>
+    <div class="progress-bar"><div class="progress-fill" style="width:56%;"></div></div>
+
+    <div class="subcategory">
+      <!-- 学部共通 -->
+      <div class="category">
+        <button class="toggle">学部共通（10 / 18）</button>
+        <div class="progress-bar small"><div class="progress-fill" style="width:50%;"></div></div>
+
+        <div class="subcategory">
+          <p>必修（5 / 14）</p>
+          <div class="progress-bar tiny"><div class="progress-fill" style="width:50%;"></div></div>
+
+          <p>選択必修（2 / 4）</p>
+          <div class="progress-bar tiny"><div class="progress-fill" style="width:50%;"></div></div>
+        </div>
+      </div>
+
+      <!-- 学科基礎 -->
+      <div class="category">
+        <button class="toggle">学科基礎（5 / 6）</button>
+        <div class="progress-bar small"><div class="progress-fill" style="width:25%;"></div></div>
+
+        <div class="subcategory">
+          <p>必修（5 / 6）</p>
+          <div class="progress-bar tiny"><div class="progress-fill" style="width:25%;"></div></div>
+        </div>
+      </div>
+
+      <!-- 学科専門 -->
+      <div class="category">
+        <button class="toggle">学科専門（30 / 49）</button>
+        <div class="progress-bar small"><div class="progress-fill" style="width:75%;"></div></div>
+
+        <div class="subcategory">
+          <p>必修（14 / 14）</p>
+          <div class="progress-bar tiny"><div class="progress-fill" style="width:75%;"></div></div>
+
+          <!-- 選択必修 -->
+          <div class="category">
+            <button class="toggle">選択必修（10 / 15）</button>
+            <div class="progress-bar tiny"><div class="progress-fill" style="width:75%;"></div></div>
+
+            <div class="subcategory">
+              <p>専攻基A（2 / 2）</p>
+              <div class="progress-bar tiny"><div class="progress-fill" style="width:80%;"></div></div>
+
+              <p>専攻基B（2 / 2）</p>
+              <div class="progress-bar tiny"><div class="progress-fill" style="width:60%;"></div></div>
+
+              <p>専攻教養（5 / 6）</p>
+              <div class="progress-bar tiny"><div class="progress-fill" style="width:50%;"></div></div>
+
+              <p>アクティブA（2 / 2）</p>
+              <div class="progress-bar tiny"><div class="progress-fill" style="width:40%;"></div></div>
+
+              <p>アクティブB（2 / 2）</p>
+              <div class="progress-bar tiny"><div class="progress-fill" style="width:40%;"></div></div>
+
+              <p>アクティブC（1 / 1）</p>
+              <div class="progress-bar tiny"><div class="progress-fill" style="width:40%;"></div></div>
+
+
+
+
+            </div>
+          </div>
+
+          <p>選択（5 / 20）</p>
+          <div class="progress-bar tiny"><div class="progress-fill" style="width:50%;"></div></div>
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- 自由選択（外に出した） -->
+  <div class="category">
+    <button class="toggle main-category"><strong>自由選択（15 / 15）</strong></button>
+    <div class="progress-bar"><div class="progress-fill" style="width:75%;"></div></div>
+  </div>
+
+  <!-- 合計 -->
+  <div class="category total">
+    <h3>合計：72 / 160</h3>
+    <div class="progress-bar large"><div class="progress-fill" style="width:45%;"></div></div>
+  </div>
+
+</section>
+
+
